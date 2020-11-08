@@ -1,4 +1,5 @@
 import React from 'react';
+// import HireWorkerButton from './UpgradeButtons.js'
 import './Game.css'
 
 function UpgradeButton(props) {
@@ -30,22 +31,25 @@ class Game extends React.Component {
             score: 0,
             clickScoreIncrement: 1,
             clickUpgradePrice: 10,
-            cheapWorkers: 0,
-            expensiveWorkers: 0,
-            workerPrice: 10,
-            previousIntervalScore: 0,
-            scorePerInterval: 0,
+            // previousIntervalScore: 0,
+            // scorePerInterval: 0,
             statusMessage: '',
+            cheapWorkers: 0,
+            cheapWorkerCost: 10,
+            expensiveWorkers: 0,
+            expensiveWorkerCost: 100,
+            workerOutput: 0,
         }
     }
 
+    // TODO: use this
     canAfford = () => {
         return (this.state.score >= this.state.cost)
     } 
 
     tick = () => {
         this.setState(state => ({
-            score: state.score + this.state.currentWorkers,
+            score: state.score + this.state.workerOutput,
         }));
     }
 
@@ -72,27 +76,54 @@ class Game extends React.Component {
     }
 
     handleWorkerClick = (e) => {
-        console.log(this.state.cheapWorkers)
-        this.setState({
-            workerType: this.state.workerType + 1,
-        });
+        // Determine which Hire Worker function to call
+        console.log(e.target.id)
+
+        switch (e.target.id) {
+            case 'cheapWorkers':
+                this.hireCheapWorker()
+                break;
+            case 'expensiveWorkers':
+                console.log('expensive ones')
+                break;
+        }
 
         // Start ticker when first worker is purchased
-        if (this.state.currentWorkers === 0) { 
-            this.interval = setInterval(() => this.tick(), 1000);
+        // if (this.state.currentWorkers === 0) { 
+        //     this.interval = setInterval(() => this.tick(), 1000);
+        // }        
+    }
+
+    hireCheapWorker = () => {
+        if (this.state.score >= this.state.cheapWorkerCost) {
+            this.setState({
+                cheapWorkers: this.state.cheapWorkers + 1,
+                score: this.state.score - this.state.cheapWorkerCost,
+                cheapWorkerCost: (Math.floor(this.state.cheapWorkerCost * 1.4)),
+                workerOutput: this.state.workerOutput + 1,
+                statusMessage: "Upgrade purchased!"
+                
+            })
+        }
+        else {
+            this.setState({
+                statusMessage: "Insufficient funds."
+            })
         }
     }
 
-    calculateScorePerInterval = () => {
-        // TODO: Consider getting rid of in general, but why am I not getting decimal places back?
-        this.setState({
-        previousIntervalScore: this.state.score,
-        scorePerInterval: (this.state.score - this.state.previousIntervalScore)*5,
-        })
-    }
+
+    // calculateScorePerInterval = () => {
+    //     // TODO: Consider getting rid of in general, but why am I not getting decimal places back?
+    //     this.setState({
+    //     previousIntervalScore: this.state.score,
+    //     scorePerInterval: (this.state.score - this.state.previousIntervalScore)*5,
+    //     });
+    // }
 
     componentDidMount() {
-        this.interval = setInterval(() => this.calculateScorePerInterval(), 1000);
+        this.interval = setInterval(() => this.tick(), 1000)
+        // this.interval = setInterval(() => this.calculateScorePerInterval(), 1000);
     }
 
     render() {
@@ -101,9 +132,9 @@ class Game extends React.Component {
                 <h2>Score: {this.state.score}</h2>
                 <button onClick={this.handlePointClick}>Add Points (+{this.state.clickScoreIncrement})</button>
                 <p><UpgradeButton onClick={this.handleUpgradeClick} /> Cost: {this.state.clickUpgradePrice}</p>
-                <p><HireWorkerButton id='cheapWorker' onClick={this.handleWorkerClick} cost={10} workerOutput={1} numWorkers={this.state.cheapWorkers}></HireWorkerButton></p>
-                <p><HireWorkerButton id='expensiveWorker' onClick={this.handleWorkerClick} cost={100} workerOutput={5} numWorkers={this.state.expensiveWorkers}></HireWorkerButton></p>
-                <p>Score per 5s: {this.state.scorePerInterval}</p>
+                <p><HireWorkerButton onClick={this.handleWorkerClick} id='cheapWorkers' cost={this.state.cheapWorkerCost} workerOutput={1} numWorkers={this.state.cheapWorkers} /></p>
+                <p><HireWorkerButton onClick={this.handleWorkerClick} id='expensiveWorkers' cost={this.state.expensiveWorkerCost} workerOutput={5} numWorkers={this.state.expensiveWorkers} /></p>
+                <p>Score per second: {this.state.workerOutput}</p>
                 <p id="statusMessage">{this.state.statusMessage}</p>
             </div>
         )
